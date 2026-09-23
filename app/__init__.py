@@ -38,7 +38,7 @@ def create_app(config_object: object = Config) -> Flask:
         from .models import (  # noqa: F401
             User, CustomerProfile, Account, Transaction, Loan, EMI,
             CreditScore, Insurance, ExpenseSplit, ExpenseSplitParticipant,
-            Autopay, Notification, FraudLog, AuditLog, Session,
+            Autopay, Notification, FraudLog, AuditLog, Session, UserKnowledge,
         )
 
     # ── Blueprints ────────────────────────────────────────────────────────────
