@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Notifications — SentinelBank AI{% endblock %}
+{% block header_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="glass-card p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-sm font-bold text-white">Recent Alerts</h3>
+    <button id="mark-all-read" class="text-xs text-blue-400 hover:underline">Mark all read</button>
+  </div>
+  <div id="notifications-list" class="space-y-3">
+    <p class="text-xs text-slate-400">Loading notifications...</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const list = document.getElementById('notifications-list');
+  const res  = await fetch('/api/notifications');
+  if (!res.ok) { list.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; return; }
+  const json = await res.json();
+  const items = json.data || [];
+  if (!items.length) { list.innerHTML = '<p class="text-xs text-slate-400">No notifications.</p>'; return; }
+
+  list.innerHTML = items.map(n => `
+    <div class="flex items-start space-x-4 p-4 rounded-xl ${n.is_read ? 'bg-slate-900/40' : 'bg-blue-900/20 border border-blue-500/20'}">
+      <div class="w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${n.is_read ? 'bg-slate-600' : 'bg-blue-400'}"></div>
+      <div class="flex-1">
+        <div class="flex justify-between items-start">
+          <span class="text-sm font-semibold ${n.is_read ? 'text-slate-300' : 'text-white'}">${n.title}</span>
+          <span class="text-[11px] text-slate-500">${n.created_at}</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">${n.message}</p>
+      </div>
+    </div>
+  `).join('');
+});
+</script>
+{% endblock %}

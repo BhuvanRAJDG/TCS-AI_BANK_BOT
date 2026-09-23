@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Fraud Center — SentinelBank AI{% endblock %}
+{% block header_title %}Security & Fraud Sentinel Center{% endblock %}
+
+{% block content %}
+<div class="glass-card p-6">
+  <div class="flex items-center space-x-3 mb-4">
+    <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+      🛡️
+    </div>
+    <div>
+      <h3 class="text-sm font-bold text-white">Real-Time Threat Monitoring</h3>
+      <p class="text-xs text-slate-400">0 High-Risk Security Incidents Flagged</p>
+    </div>
+  </div>
+  <div class="p-4 bg-slate-900/60 rounded-lg text-xs text-slate-300">
+    All transactions are scanned in real-time by Sentinel ML anomaly detection engine. Suspicious logins or location jumps automatically trigger MFA lock down.
+  </div>
+</div>
+{% endblock %}

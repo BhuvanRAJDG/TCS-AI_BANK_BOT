@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SentinelBank AI — Secure Banking Copilot{% endblock %}</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js 4.4.1 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Custom Glassmorphism Styling -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen flex flex-col">
+  {% include 'components/navbar.html' %}
+  
+  <div class="flex flex-1 pt-16 overflow-hidden">
+    {% include 'components/sidebar.html' %}
+    
+    <main class="flex-1 overflow-y-auto p-6 lg:p-8">
+      {% include 'components/topbar.html' %}
+      
+      <div class="mt-6">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

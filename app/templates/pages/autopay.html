@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Autopay — SentinelBank AI{% endblock %}
+{% block header_title %}Autopay Mandates{% endblock %}
+
+{% block content %}
+<div class="glass-card p-6">
+  <h3 class="text-sm font-bold text-white mb-4">Active NACH / UPI Autopay Mandates</h3>
+  <div class="space-y-3 text-xs">
+    <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg">
+      <div>
+        <div class="font-semibold text-slate-100">BESCOM Electricity Bill</div>
+        <div class="text-slate-400">Max Cap: ₹5,000 • Monthly</div>
+      </div>
+      <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded">Active</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

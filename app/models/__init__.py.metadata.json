@@ -1,0 +1,4 @@
+{
+  "summary": "Models package init – imports all models so SQLAlchemy registers them",
+  "updatedAt": "2026-09-23T10:09:17.982157200Z"
+}

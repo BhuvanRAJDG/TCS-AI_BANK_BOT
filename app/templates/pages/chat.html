@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}AI Banking Copilot — SentinelBank AI{% endblock %}
+{% block header_title %}AI Banking Copilot{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-10rem)] max-w-4xl mx-auto">
+
+  <!-- Chat header badges -->
+  <div class="flex items-center justify-between mb-4 flex-shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-white font-bold shadow-lg">🤖</div>
+      <div>
+        <h2 class="text-sm font-bold text-white">SentinelBank Copilot</h2>
+        <p class="text-[11px] text-slate-400">Powered by Gemini 3.6 Flash · End-to-End Encrypted</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3">
+      <span id="secure-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>AES-256 Secured
+      </span>
+      <span id="latency-badge" class="px-2.5 py-1 rounded-full text-[11px] font-mono bg-slate-800 text-slate-400 border border-slate-700 hidden">
+        ⏱ <span id="latency-value">-</span> ms
+      </span>
+      <button id="clear-chat-btn" title="Clear conversation" class="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition text-xs">
+        🗑 Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages area -->
+  <div id="chat-messages" class="flex-1 overflow-y-auto space-y-4 pr-2 pb-2">
+
+    <!-- Welcome message -->
+    <div class="flex justify-start">
+      <div class="max-w-[80%] glass-card px-5 py-4 rounded-2xl rounded-bl-none">
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">AI Copilot</span>
+          <span class="text-[10px] text-slate-500 font-mono">SQL + RAG</span>
+        </div>
+        <p class="text-sm text-slate-200 leading-relaxed">
+          Hello! I'm your SentinelBank AI Banking Copilot. I can answer questions about your <strong class="text-white">account balance, transactions, EMIs, loans</strong> and credit score — or explain <strong class="text-white">bank policies, RBI guidelines and insurance</strong> using our document knowledge base.
+        </p>
+        <p class="text-xs text-slate-400 mt-2">What can I help you with today?</p>
+      </div>
+    </div>
+
+    <!-- Suggested prompts -->
+    <div id="suggested-prompts" class="flex flex-wrap gap-2 justify-start pl-1">
+      {% for prompt in suggested_prompts %}
+      <button
+        onclick="sendSuggested(this)"
+        data-prompt="{{ prompt }}"
+        class="px-3 py-1.5 text-xs rounded-full glass-card border border-slate-700 text-slate-300 hover:border-blue-500/50 hover:text-blue-300 transition cursor-pointer">
+        {{ prompt }}
+      </button>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <!-- Typing indicator -->
+  <div id="typing-indicator" class="hidden flex items-center space-x-2 py-2 pl-1">
+    <div class="flex space-x-1">
+      <span class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
+      <span class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
+      <span class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
+    </div>
+    <span class="text-xs text-slate-400 italic">Copilot is thinking…</span>
+  </div>
+
+  <!-- Input bar -->
+  <form id="chat-form" class="flex-shrink-0 mt-4">
+    <div class="flex items-end space-x-3 glass-card p-3 rounded-2xl border border-slate-700/50">
+      <textarea
+        id="chat-input"
+        rows="1"
+        maxlength="1000"
+        placeholder="Ask about your balance, transactions, EMIs, loans, or bank policies…"
+        class="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 resize-none outline-none max-h-32 leading-relaxed"
+        style="field-sizing: content; min-height: 24px;"
+        onkeydown="handleKey(event)"
+      ></textarea>
+      <button
+        type="submit"
+        id="send-btn"
+        class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-600 text-white flex items-center justify-center hover:opacity-90 transition disabled:opacity-40"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+    <p class="text-[10px] text-slate-600 text-center mt-1.5">SentinelBank Copilot may make mistakes. Verify critical financial decisions.</p>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Route colour mapping ──────────────────────────────────────────────────────
+const routeColors = {
+  sql: { badge: 'bg-blue-900/60 text-blue-300 border-blue-500/30',  label: '🗄 SQL' },
+  rag: { badge: 'bg-purple-900/60 text-purple-300 border-purple-500/30', label: '📚 RAG' }
+};
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function appendMessage(sender, text, meta = {}) {
+  const container = document.getElementById('chat-messages');
+  const isUser    = sender === 'user';
+  const div       = document.createElement('div');
+  div.className   = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-1`;
+
+  const rc = meta.route ? (routeColors[meta.route] || routeColors.rag) : null;
+
+  let routeBadge = rc
+    ? `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded border ${rc.badge} mr-1">${rc.label}</span>`
+    : '';
+  let intentBadge = meta.intent && meta.intent !== 'blocked'
+    ? `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${escapeHtml(meta.intent)}</span>`
+    : '';
+
+  let citationHtml = '';
+  if (meta.citations && meta.citations.length) {
+    citationHtml = `
+      <div class="mt-2 pt-2 border-t border-slate-700/60 text-xs text-slate-400 flex flex-wrap gap-1 items-center">
+        <span class="font-semibold">Sources:</span>
+        ${meta.citations.map(c => `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-blue-300 border border-slate-700">${escapeHtml(c)}</span>`).join('')}
+      </div>`;
+  }
+
+  let headerHtml = !isUser ? `
+    <div class="flex items-center space-x-1 mb-1.5">
+      ${routeBadge}${intentBadge}
+    </div>` : '';
+
+  div.innerHTML = `
+    <div class="max-w-[82%] ${isUser
+      ? 'bg-blue-600 text-white rounded-2xl rounded-br-none px-4 py-3 text-sm'
+      : 'glass-card text-slate-100 rounded-2xl rounded-bl-none px-5 py-4 text-sm leading-relaxed'}">
+      ${headerHtml}
+      <div>${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+      ${citationHtml}
+    </div>`;
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Form submit ───────────────────────────────────────────────────────────────
+document.getElementById('chat-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  await sendMessage();
+});
+
+async function sendMessage() {
+  const input  = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+  const message = input.value.trim();
+  if (!message) return;
+
+  appendMessage('user', message);
+  input.value = '';
+  input.style.height = '';
+
+  // Hide suggested prompts after first message
+  const promptsEl = document.getElementById('suggested-prompts');
+  if (promptsEl) promptsEl.classList.add('hidden');
+
+  // Disable input while waiting
+  sendBtn.disabled = true;
+  document.getElementById('typing-indicator').classList.remove('hidden');
+
+  const t0 = Date.now();
+
+  try {
+    const res  = await fetch('/api/chat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message })
+    });
+
+    const latency = Date.now() - t0;
+    document.getElementById('latency-badge').classList.remove('hidden');
+    document.getElementById('latency-value').textContent = latency.toLocaleString();
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+      appendMessage('assistant', err.error || 'Something went wrong. Please try again.', {});
+      return;
+    }
+
+    const data = await res.json();
+    appendMessage('assistant', data.response, {
+      intent:    data.intent,
+      route:     data.route,
+      citations: data.citations
+    });
+
+  } catch (err) {
+    appendMessage('assistant', 'Network error — please check your connection and try again.', {});
+  } finally {
+    document.getElementById('typing-indicator').classList.add('hidden');
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+// ── Suggested prompt buttons ──────────────────────────────────────────────────
+function sendSuggested(btn) {
+  const input = document.getElementById('chat-input');
+  input.value = btn.dataset.prompt;
+  sendMessage();
+}
+
+// ── Keyboard shortcut: Enter submits, Shift+Enter newline ─────────────────────
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// ── Clear history button ──────────────────────────────────────────────────────
+document.getElementById('clear-chat-btn').addEventListener('click', async () => {
+  await fetch('/api/chat/history', { method: 'DELETE' });
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  document.getElementById('latency-badge').classList.add('hidden');
+});
+</script>
+{% endblock %}

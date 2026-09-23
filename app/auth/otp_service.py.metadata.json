@@ -1,0 +1,4 @@
+{
+  "summary": "OTP service with in-memory store, 6-digit OTP, 5-min expiry, 3 retry limit",
+  "updatedAt": "2026-09-23T10:18:00.917347700Z"
+}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Register — SentinelBank AI{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto my-12 glass-card p-8">
+  <div class="text-center mb-6">
+    <h2 class="text-2xl font-bold text-white">Create Account</h2>
+    <p class="text-xs text-slate-400 mt-1">Join SentinelBank AI Banking Ecosystem</p>
+  </div>
+  
+  <div id="error-alert" class="hidden mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-300 text-xs font-medium"></div>
+  <div id="info-alert" class="hidden mb-4 p-3 rounded-lg bg-blue-500/20 border border-blue-500/50 text-blue-300 text-xs font-medium"></div>
+
+  <form id="register-form" class="space-y-4">
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Full Name</label>
+      <input type="text" id="full_name" name="full_name" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="Aarav Sharma">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Email Address</label>
+      <input type="email" id="email" name="email" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="aarav@example.com">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Preferred Language</label>
+      <select id="preferred_language" name="preferred_language" class="w-full px-4 py-2.5 rounded-lg glass-input text-sm bg-slate-900">
+        <option value="en">English</option>
+        <option value="hi">Hindi (हिंदी)</option>
+        <option value="kn">Kannada (ಕನ್ನಡ)</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Password</label>
+      <input type="password" id="password" name="password" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="••••••••">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1">Confirm Password</label>
+      <input type="password" id="confirm_password" name="confirm_password" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="••••••••">
+    </div>
+    <button type="submit" id="submit-btn" class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 font-semibold text-sm hover:opacity-90 transition">
+      Register Account
+    </button>
+  </form>
+
+  <p class="text-xs text-center text-slate-400 mt-6">
+    Already have an account? <a href="/login" class="text-blue-400 font-medium hover:underline">Sign in here</a>
+  </p>
+</div>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errBox = document.getElementById('error-alert');
+  const infoBox = document.getElementById('info-alert');
+  const submitBtn = document.getElementById('submit-btn');
+
+  errBox.classList.add('hidden');
+  infoBox.classList.add('hidden');
+  submitBtn.disabled = true;
+  submitBtn.innerText = 'Registering...';
+
+  const name = document.getElementById('full_name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const preferred_language = document.getElementById('preferred_language').value;
+  const password = document.getElementById('password').value;
+  const confirm_password = document.getElementById('confirm_password').value;
+
+  try {
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, preferred_language, password, confirm_password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      let errMsg = data.error || '';
+      if (data.errors) {
+        errMsg = Object.values(data.errors).join(' | ');
+      }
+      errBox.innerText = errMsg || 'Registration failed.';
+      errBox.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Register Account';
+      return;
+    }
+
+    infoBox.innerText = 'Account created successfully! Redirecting to login...';
+    infoBox.classList.remove('hidden');
+    setTimeout(() => { window.location.href = '/login'; }, 1200);
+  } catch (err) {
+    errBox.innerText = 'Network error during registration. Please try again.';
+    errBox.classList.remove('hidden');
+    submitBtn.disabled = false;
+    submitBtn.innerText = 'Register Account';
+  }
+});
+</script>
+{% endblock %}

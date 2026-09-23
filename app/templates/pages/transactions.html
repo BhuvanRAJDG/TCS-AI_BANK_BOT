@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Transactions — SentinelBank AI{% endblock %}
+{% block header_title %}Transaction Ledger{% endblock %}
+
+{% block content %}
+<div class="glass-card p-6">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div class="flex items-center space-x-3">
+      <input type="text" placeholder="Search transactions..." class="glass-input px-4 py-2 rounded-lg text-sm w-64">
+      <select class="glass-input px-3 py-2 rounded-lg text-sm bg-slate-900">
+        <option value="">All Categories</option>
+        <option value="shopping">Shopping</option>
+        <option value="dining">Dining</option>
+        <option value="utilities">Utilities</option>
+        <option value="transfer">Transfer</option>
+      </select>
+    </div>
+    <div class="text-xs text-slate-400">
+      Showing recent ledger entries
+    </div>
+  </div>
+
+  <div id="tx-list-container">
+    <p class="text-xs text-slate-400">Loading transactions...</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
+{% endblock %}

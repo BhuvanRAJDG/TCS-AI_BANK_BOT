@@ -1,0 +1,4 @@
+{
+  "summary": "Fixed notifications route to use user_id instead of customer_id",
+  "updatedAt": "2026-09-23T10:56:27.814595Z"
+}

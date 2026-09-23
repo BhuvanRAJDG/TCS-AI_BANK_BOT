@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}EMI Schedules — SentinelBank AI{% endblock %}
+{% block header_title %}EMI Repayment Schedule{% endblock %}
+
+{% block content %}
+<div class="glass-card p-6">
+  <h3 class="text-sm font-semibold text-slate-200 mb-4">Upcoming Installments</h3>
+  <div class="space-y-3 text-xs">
+    <div class="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
+      <div>
+        <div class="font-semibold text-slate-100">Home Loan — Installment #24</div>
+        <div class="text-slate-400">Due: Oct 05, 2026</div>
+      </div>
+      <div class="text-right">
+        <div class="font-bold text-emerald-400">₹38,750</div>
+        <span class="text-[10px] text-amber-400">Autopay Scheduled</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

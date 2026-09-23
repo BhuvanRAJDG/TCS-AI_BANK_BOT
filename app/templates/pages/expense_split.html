@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Expense Split — SentinelBank AI{% endblock %}
+{% block header_title %}Bill Splitting & Shared Expenses{% endblock %}
+
+{% block content %}
+<div class="glass-card p-6">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-sm font-bold text-white">Active Group Splits</h3>
+    <button class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs text-white font-medium">+ New Split Group</button>
+  </div>
+  <div class="p-4 bg-slate-900/60 rounded-lg text-xs space-y-2">
+    <div class="flex justify-between text-slate-200 font-semibold">
+      <span>Goa Trip 2026</span>
+      <span class="text-emerald-400">You are owed ₹1,250</span>
+    </div>
+    <div class="text-slate-400">Total Group Spend: ₹18,400 • 4 Members</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Insurance — SentinelBank AI{% endblock %}
+{% block header_title %}Insurance Policies{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="glass-card p-6">
+    <div class="flex justify-between items-start">
+      <div>
+        <span class="text-xs uppercase text-emerald-400 font-semibold">Health Insurance</span>
+        <h3 class="text-lg font-bold text-white mt-1">HDFC ERGO Optima Secure</h3>
+        <p class="text-xs text-slate-400 font-mono mt-0.5">Policy # POL-7890123</p>
+      </div>
+      <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded">Active</span>
+    </div>
+    <div class="mt-4 pt-4 border-t border-slate-800 text-xs space-y-1 text-slate-300">
+      <div class="flex justify-between"><span>Sum Insured:</span><span class="font-bold text-white">₹10,00,000</span></div>
+      <div class="flex justify-between"><span>Annual Premium:</span><span>₹14,500 / yr</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

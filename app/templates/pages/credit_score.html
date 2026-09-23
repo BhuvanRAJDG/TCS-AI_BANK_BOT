@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Credit Score — SentinelBank AI{% endblock %}
+{% block header_title %}CIBIL Credit Intelligence{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto glass-card p-8 text-center">
+  <div class="w-32 h-32 rounded-full border-8 border-emerald-500 flex items-center justify-center mx-auto text-4xl font-black text-white shadow-2xl glow-emerald">
+    780
+  </div>
+  <h2 class="text-xl font-bold text-white mt-4">Excellent Credit Health</h2>
+  <p class="text-xs text-slate-400 mt-1">You are in the top 10% of borrowers across India.</p>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8 text-left text-xs">
+    <div class="p-3 bg-slate-900/60 rounded-lg">
+      <span class="text-slate-400">Payment History</span>
+      <div class="font-bold text-emerald-400 mt-1">99% On-time</div>
+    </div>
+    <div class="p-3 bg-slate-900/60 rounded-lg">
+      <span class="text-slate-400">Credit Utilization</span>
+      <div class="font-bold text-emerald-400 mt-1">18% (Optimal)</div>
+    </div>
+    <div class="p-3 bg-slate-900/60 rounded-lg">
+      <span class="text-slate-400">Total Accounts</span>
+      <div class="font-bold text-slate-200 mt-1">4 Active</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Settings — SentinelBank AI{% endblock %}
+{% block header_title %}Account & Security Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+  <!-- Security & Password -->
+  <div class="glass-card p-6">
+    <div class="flex items-center space-x-3 mb-4">
+      <div class="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-white">Security & Password</h3>
+        <p class="text-xs text-slate-400">Manage multi-factor authentication and credentials</p>
+      </div>
+    </div>
+
+    <form id="password-form" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Current Password</label>
+        <input type="password" id="current-password" required class="w-full px-3 py-2 bg-slate-900/60 border border-slate-700/60 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition">
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">New Password</label>
+          <input type="password" id="new-password" required class="w-full px-3 py-2 bg-slate-900/60 border border-slate-700/60 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Confirm New Password</label>
+          <input type="password" id="confirm-password" required class="w-full px-3 py-2 bg-slate-900/60 border border-slate-700/60 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition">
+        </div>
+      </div>
+      <div class="flex justify-end pt-2">
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition shadow-lg shadow-blue-500/20">
+          Update Password
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Preferences & MFA -->
+  <div class="glass-card p-6">
+    <div class="flex items-center space-x-3 mb-4">
+      <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-white">System Preferences</h3>
+        <p class="text-xs text-slate-400">Language, Notifications, & Multi-Factor Auth</p>
+      </div>
+    </div>
+
+    <div class="space-y-4 text-xs">
+      <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl">
+        <div>
+          <div class="font-medium text-slate-200">Two-Factor Authentication (OTP)</div>
+          <div class="text-slate-400 mt-0.5">Require 6-digit OTP verification on login</div>
+        </div>
+        <input type="checkbox" checked class="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700">
+      </div>
+
+      <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl">
+        <div>
+          <div class="font-medium text-slate-200">Email Alerts</div>
+          <div class="text-slate-400 mt-0.5">Receive immediate notifications for transactions</div>
+        </div>
+        <input type="checkbox" checked class="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700">
+      </div>
+
+      <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl">
+        <div>
+          <div class="font-medium text-slate-200">Preferred AI Copilot Language</div>
+          <div class="text-slate-400 mt-0.5">Choose primary response language</div>
+        </div>
+        <select class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none">
+          <option value="en">English</option>
+          <option value="hi">Hindi (हिंदी)</option>
+          <option value="ta">Tamil (தமிழ்)</option>
+          <option value="te">Telugu (తెలుగు)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

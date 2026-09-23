@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: sentinelbank
+      MYSQL_USER: sentinel_user
+      MYSQL_PASSWORD: sentinel_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://sentinel_user:sentinel_pass@db:3306/sentinelbank
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - FLASK_DEBUG=1
+    depends_on:
+      - db
+      - chroma
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+
+volumes:
+  db_data:
+  chroma_data:
