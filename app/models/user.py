@@ -20,6 +20,7 @@ class User(db.Model):
     id            = Column(Integer, primary_key=True)
     email         = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+    upi_pin_hash  = Column(String(255), nullable=True)  # Hashed 4-6 digit UPI PIN
     phone         = Column(String(20),  nullable=True)
     role          = Column(SAEnum('customer','bank_agent','admin', name='user_role'),
                            nullable=False, default='customer')

@@ -10,6 +10,22 @@ profile_bp = Blueprint('profile', __name__)
 def profile_page():
     return render_template('pages/profile.html')
 
+@profile_bp.route('/api/profile', methods=['GET'])
+def api_profile():
+    return ProfileController.get_profile()
+
+@profile_bp.route('/api/profile/set-upi-pin', methods=['POST'])
+def api_set_upi_pin():
+    return ProfileController.set_upi_pin()
+
+@profile_bp.route('/api/profile/change-password', methods=['POST'])
+def api_change_password():
+    return ProfileController.change_password()
+
+@profile_bp.route('/api/profile/settings', methods=['POST'])
+def api_profile_settings():
+    return ProfileController.update_settings()
+
 @profile_bp.route('/settings')
 def settings_page():
     return render_template('pages/settings.html')
@@ -30,8 +46,8 @@ def fraud_center_page():
 def get_expense_splits():
     from flask import g
     from app.services.expense_split_service import get_user_splits
-    # Fallback to demo customer 1 if not logged in
-    customer_id = getattr(getattr(g, 'current_user', None), 'id', 1)
+    user = getattr(g, 'current_user', None)
+    customer_id = user.id if user else 1
     try:
         data = get_user_splits(customer_id)
         return jsonify(data), 200
@@ -43,7 +59,8 @@ def get_expense_splits():
 def create_expense_split():
     from flask import request, g
     from app.services.expense_split_service import create_split
-    customer_id = getattr(getattr(g, 'current_user', None), 'id', 1)
+    user = getattr(g, 'current_user', None)
+    customer_id = user.id if user else 1
     req = request.get_json(silent=True) or request.form.to_dict() or {}
     title = req.get('title')
     try:
@@ -68,17 +85,15 @@ def create_expense_split():
 def settle_expense_split(split_id):
     from flask import g, request
     from app.services.expense_split_service import settle_participant
+    from app.services.profile_service import ProfileService
     user = getattr(g, 'current_user', None)
     customer_id = user.id if user else 1
 
     req = request.get_json(silent=True) or {}
     pin = str(req.get('pin', '')).strip()
     if pin and user:
-        from app.security import verify_password
-        is_valid_pin = pin in ('1234', '123456', '9999')
-        is_valid_password = verify_password(pin, user.password_hash)
-        if not (is_valid_pin or is_valid_password):
-            return jsonify({'error': 'Incorrect UPI PIN or password. Default demo PIN is 1234.'}), 400
+        if not ProfileService.verify_user_upi_pin(user.id, pin):
+            return jsonify({'error': 'Incorrect UPI PIN or account password.'}), 400
 
     try:
         res = settle_participant(split_id, customer_id)
@@ -87,4 +102,3 @@ def settle_expense_split(split_id):
         return jsonify({'error': str(ve)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-

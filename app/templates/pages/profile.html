@@ -1,79 +1,420 @@
 {% extends "base.html" %}
-{% block title %}My Profile — SentinelBank AI{% endblock %}
-{% block header_title %}Customer Profile{% endblock %}
+{% block title %}My Profile & Security — CBS Bank AI{% endblock %}
+{% block header_title %}Customer Profile & Security Center{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto space-y-6">
-  <!-- Profile header -->
-  <div class="glass-card p-6 flex items-center space-x-6">
-    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-3xl font-black text-white flex-shrink-0">A</div>
-    <div>
-      <h2 class="text-xl font-bold text-white" id="profile-name">Loading…</h2>
-      <p class="text-sm text-slate-400 mt-0.5" id="profile-email">—</p>
-      <div class="flex items-center space-x-2 mt-2">
-        <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/20" id="kyc-badge">KYC Verified</span>
-        <span class="text-[11px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/20" id="role-badge">Customer</span>
+<div class="max-w-4xl mx-auto space-y-6 pb-12">
+
+  <!-- Notification Toast -->
+  <div id="toast-msg" class="hidden p-4 rounded-2xl text-xs font-semibold shadow-lg transition transform duration-300"></div>
+
+  <!-- Profile Header Card -->
+  <div class="glass-card p-6 md:p-8 rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-blue-950/40 relative overflow-hidden shadow-xl">
+    <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+      <div class="flex items-center space-x-5">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-3xl font-black text-white shadow-lg shadow-blue-500/25 flex-shrink-0" id="avatar-box">
+          U
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-2xl font-black text-white tracking-tight" id="profile-name">Loading Profile...</h2>
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1 font-mono" id="profile-email">Fetching account email...</p>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1" id="kyc-badge">
+              <span>✓</span>
+              <span>KYC Verified</span>
+            </span>
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wide font-mono" id="role-badge">
+              Customer
+            </span>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono">
+              User ID: <span id="profile-user-id" class="text-white font-bold">—</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="/chat" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white text-xs font-bold shadow-lg shadow-blue-500/20 transition flex items-center space-x-1.5">
+          <span>🤖</span>
+          <span>Ask CBS Bot</span>
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- KYC Details -->
-  <div class="glass-card p-6">
-    <h3 class="text-sm font-semibold text-slate-300 mb-4">Identity & KYC</h3>
-    <div class="grid grid-cols-2 gap-4 text-xs">
-      <div><span class="text-slate-400">PAN (Masked)</span><div class="font-mono text-slate-200 mt-1" id="pan-masked">XXXXX1234X</div></div>
-      <div><span class="text-slate-400">Aadhaar (Masked)</span><div class="font-mono text-slate-200 mt-1" id="aadhaar-masked">XXXX-XXXX-1234</div></div>
-      <div><span class="text-slate-400">Phone</span><div class="text-slate-200 mt-1" id="profile-phone">—</div></div>
-      <div><span class="text-slate-400">City / State</span><div class="text-slate-200 mt-1" id="profile-location">—</div></div>
+  <!-- Security & Credentials Hub (UPI PIN & Password) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- UPI PIN Manager Card -->
+    <div class="glass-card p-6 rounded-3xl border border-slate-800 flex flex-col justify-between relative overflow-hidden">
+      <div class="absolute -right-8 -top-8 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-bold text-white flex items-center space-x-2">
+            <span>⚡ FastPay UPI PIN</span>
+          </h3>
+          <span id="upi-pin-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            Active (••••)
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Your secure 4 to 6 digit UPI PIN is required for money transfers and AI bot payments.
+        </p>
+
+        <div class="mt-4 p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1.5 text-xs">
+          <div class="flex justify-between text-slate-400">
+            <span>PIN Status:</span>
+            <span class="text-slate-200 font-semibold" id="upi-status-text">Configured & Protected</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>Forgot your PIN?</span>
+            <span class="text-blue-400 font-medium">Verify with password to reset</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-800 flex items-center gap-3">
+        <button onclick="openModal('modal-upi-pin')" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white text-xs font-bold shadow-lg shadow-emerald-500/20 transition">
+          Set / Reset UPI PIN →
+        </button>
+      </div>
+    </div>
+
+    <!-- Password Management Card -->
+    <div class="glass-card p-6 rounded-3xl border border-slate-800 flex flex-col justify-between relative overflow-hidden">
+      <div class="absolute -right-8 -top-8 w-28 h-28 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-bold text-white flex items-center space-x-2">
+            <span>🔐 Account Password</span>
+          </h3>
+          <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">
+            Bcrypt Hashed
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Used to log in and authorize sensitive profile actions or PIN resets.
+        </p>
+
+        <div class="mt-4 p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1.5 text-xs">
+          <div class="flex justify-between text-slate-400">
+            <span>Encryption:</span>
+            <span class="text-slate-200 font-mono font-semibold">Salted Bcrypt (Cost 12)</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>MFA Status:</span>
+            <span class="text-emerald-400 font-semibold">Protected</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-800 flex items-center gap-3">
+        <button onclick="openModal('modal-password')" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition">
+          Change Password →
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Identity & KYC Details -->
+  <div class="glass-card p-6 md:p-8 rounded-3xl border border-slate-800">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-base font-bold text-white flex items-center space-x-2">
+        <span>🪪 Identity & Verified KYC</span>
+      </h3>
+      <span class="text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1 rounded-xl border border-slate-800">RBI Regulated</span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+      <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-slate-400 block text-[11px]">PAN (Masked)</span>
+        <div class="font-mono text-sm font-bold text-white mt-1" id="pan-masked">XXXXX1234X</div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-slate-400 block text-[11px]">Aadhaar (Masked)</span>
+        <div class="font-mono text-sm font-bold text-white mt-1" id="aadhaar-masked">XXXX-XXXX-9012</div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-slate-400 block text-[11px]">Phone Number</span>
+        <div class="font-mono text-xs font-semibold text-slate-200 mt-1" id="profile-phone">+91 98765 43210</div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-slate-400 block text-[11px]">City / State</span>
+        <div class="text-xs font-semibold text-slate-200 mt-1" id="profile-location">Mumbai, Maharashtra</div>
+      </div>
     </div>
   </div>
 
-  <!-- Accounts -->
-  <div class="glass-card p-6">
-    <h3 class="text-sm font-semibold text-slate-300 mb-4">Linked Accounts</h3>
-    <div id="accounts-list" class="space-y-3 text-xs">
-      <p class="text-slate-400">Loading…</p>
+  <!-- Linked Bank Accounts -->
+  <div class="glass-card p-6 md:p-8 rounded-3xl border border-slate-800">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center space-x-2">
+          <span>💳 Connected CBS Accounts</span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5">Real-time ledger balance and account routing information</p>
+      </div>
+      <span class="text-xs font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-xl">CBS Live Sync</span>
     </div>
+
+    <div id="accounts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="p-8 text-center text-xs text-slate-400 col-span-2">
+        <span class="animate-spin inline-block mr-2">⏳</span> Loading linked bank accounts...
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal 1: Set / Reset UPI PIN -->
+<div id="modal-upi-pin" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+  <div class="glass-card p-6 md:p-8 rounded-3xl border border-slate-700 bg-slate-950 w-full max-w-md shadow-2xl relative">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-base font-bold text-white">⚡ Set / Reset FastPay UPI PIN</h3>
+      <button onclick="closeModal('modal-upi-pin')" class="text-slate-400 hover:text-white text-lg">✕</button>
+    </div>
+    <p class="text-xs text-slate-400 mb-5">
+      Enter your account password to verify your identity and set a new 4 to 6 digit UPI PIN.
+    </p>
+
+    <form id="form-upi-pin" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Account Password (For Authorization)</label>
+        <input type="password" id="upi-auth-password" required placeholder="Enter current login password" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">New 4-6 Digit UPI PIN</label>
+        <input type="password" id="upi-new-pin" maxlength="6" pattern="[0-9]{4,6}" inputmode="numeric" required placeholder="e.g. 5821 or 123456" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono tracking-widest focus:outline-none focus:border-emerald-500 transition">
+        <span class="text-[10px] text-slate-400 mt-1 block">Must be 4 to 6 digits (numbers only)</span>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" onclick="closeModal('modal-upi-pin')" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition">
+          Cancel
+        </button>
+        <button type="submit" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:opacity-95 shadow-lg shadow-emerald-500/20 transition">
+          Save New UPI PIN
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Change Account Password -->
+<div id="modal-password" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+  <div class="glass-card p-6 md:p-8 rounded-3xl border border-slate-700 bg-slate-950 w-full max-w-md shadow-2xl relative">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-base font-bold text-white">🔐 Change Account Password</h3>
+      <button onclick="closeModal('modal-password')" class="text-slate-400 hover:text-white text-lg">✕</button>
+    </div>
+    <p class="text-xs text-slate-400 mb-5">
+      Update your login password. Must be at least 8 characters with upper, lower, digit, and symbol.
+    </p>
+
+    <form id="form-password" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Current Password</label>
+        <input type="password" id="curr-password" required placeholder="Enter existing password" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500 transition">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">New Strong Password</label>
+        <input type="password" id="new-password" required placeholder="e.g. SecureBank#2026" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500 transition">
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" onclick="closeModal('modal-password')" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition">
+          Cancel
+        </button>
+        <button type="submit" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:opacity-95 shadow-lg shadow-blue-500/20 transition">
+          Update Password
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-  const res = await fetch('/api/profile');
-  if (!res.ok) return;
-  const { data } = await res.json();
-  if (!data) return;
+function showToast(msg, isSuccess = true) {
+  const toast = document.getElementById('toast-msg');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.className = `p-4 rounded-2xl text-xs font-bold shadow-xl border block mb-4 ${isSuccess ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40' : 'bg-rose-950/90 text-rose-300 border-rose-500/40'}`;
+  setTimeout(() => { toast.className = 'hidden'; }, 5000);
+}
 
-  document.getElementById('profile-email').textContent = data.email || '';
-  document.getElementById('role-badge').textContent    = data.role || 'Customer';
+function openModal(id) {
+  document.getElementById(id)?.classList.remove('hidden');
+}
 
-  if (data.customer) {
-    const c = data.customer;
-    document.getElementById('profile-name').textContent    = c.full_name || 'Customer';
-    document.getElementById('pan-masked').textContent      = c.pan_masked || 'N/A';
-    document.getElementById('aadhaar-masked').textContent  = c.aadhaar_masked || 'N/A';
-    document.getElementById('profile-phone').textContent   = c.phone || 'N/A';
-    document.getElementById('profile-location').textContent = `${c.city}, ${c.state}`;
-    document.getElementById('kyc-badge').textContent       = `KYC ${c.kyc_status}`;
-    // First letter avatar
-    document.querySelector('.text-3xl').textContent = (c.full_name || 'U')[0].toUpperCase();
+function closeModal(id) {
+  document.getElementById(id)?.classList.add('hidden');
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch('/api/profile');
+    if (!res.ok) return;
+    const json = await res.json();
+    const data = json.data;
+    if (!data) return;
+
+    // User & ID
+    document.getElementById('profile-email').textContent = data.email || 'customer@sentinelbank.com';
+    document.getElementById('role-badge').textContent    = (data.role || 'Customer').toUpperCase();
+    document.getElementById('profile-user-id').textContent = '#' + data.user_id;
+
+    const initial = (data.customer?.full_name || data.email || 'U').charAt(0).toUpperCase();
+    const avatar = document.getElementById('avatar-box');
+    if (avatar) avatar.textContent = initial;
+
+    // UPI PIN status
+    const upiBadge = document.getElementById('upi-pin-badge');
+    const upiStatus = document.getElementById('upi-status-text');
+    if (data.has_upi_pin) {
+      if (upiBadge) upiBadge.textContent = '✓ Active (••••)';
+      if (upiStatus) upiStatus.textContent = 'Active (Protected with PIN)';
+    } else {
+      if (upiBadge) {
+        upiBadge.textContent = 'Demo Default (1234)';
+        upiBadge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30';
+      }
+      if (upiStatus) upiStatus.textContent = 'Default Demo PIN active (Set your custom PIN)';
+    }
+
+    // Customer profile
+    if (data.customer) {
+      const c = data.customer;
+      document.getElementById('profile-name').textContent    = c.full_name || 'Valued Customer';
+      document.getElementById('pan-masked').textContent      = c.pan_masked || 'ABCDE1234F';
+      document.getElementById('aadhaar-masked').textContent  = c.aadhaar_masked || 'XXXX-XXXX-9012';
+      document.getElementById('profile-phone').textContent   = c.phone || '+91 98765 43210';
+      document.getElementById('profile-location').textContent = `${c.city || 'Mumbai'}, ${c.state || 'Maharashtra'}`;
+      
+      const kycBadge = document.getElementById('kyc-badge');
+      if (kycBadge) {
+        kycBadge.innerHTML = `<span>✓</span> <span>KYC ${(c.kyc_status || 'Verified').toUpperCase()}</span>`;
+      }
+    }
+
+    // Accounts
+    const accContainer = document.getElementById('accounts-list');
+    if (accContainer && data.accounts) {
+      if (data.accounts.length === 0) {
+        accContainer.innerHTML = `
+          <div class="col-span-2 p-6 text-center text-xs text-slate-400">
+            No bank accounts linked yet.
+          </div>
+        `;
+      } else {
+        accContainer.innerHTML = data.accounts.map(acc => `
+          <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition relative overflow-hidden group">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  ${acc.account_type} Account
+                </span>
+                <div class="font-mono text-base font-bold text-white mt-2 flex items-center space-x-2">
+                  <span>${acc.account_number}</span>
+                </div>
+                <div class="text-[11px] text-slate-400 font-mono mt-0.5">
+                  IFSC: <span class="text-slate-300 font-semibold">${acc.ifsc}</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 block">Available Balance</span>
+                <span class="text-lg font-black text-emerald-400 font-mono">
+                  ₹${Number(acc.balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                </span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+              <span class="text-emerald-400 flex items-center space-x-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Active Core CBS</span>
+              </span>
+              <a href="/transactions" class="text-blue-400 hover:underline">Passbook →</a>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+  } catch (err) {
+    console.error("Profile load error:", err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfile();
+
+  // Form 1: Set UPI PIN
+  const upiForm = document.getElementById('form-upi-pin');
+  if (upiForm) {
+    upiForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('upi-auth-password').value;
+      const new_pin  = document.getElementById('upi-new-pin').value;
+
+      try {
+        const res = await fetch('/api/profile/set-upi-pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password, new_pin })
+        });
+        const json = await res.json();
+        if (res.ok) {
+          showToast(json.message || 'UPI PIN updated successfully!', true);
+          closeModal('modal-upi-pin');
+          upiForm.reset();
+          loadProfile();
+        } else {
+          showToast(json.error || 'Failed to update UPI PIN.', false);
+        }
+      } catch (err) {
+        showToast('Network error while updating UPI PIN.', false);
+      }
+    });
   }
 
-  if (data.accounts && data.accounts.length) {
-    document.getElementById('accounts-list').innerHTML = data.accounts.map(a => `
-      <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg">
-        <div>
-          <div class="font-semibold text-slate-200 capitalize">${a.account_type} Account</div>
-          <div class="font-mono text-slate-400 mt-0.5">${a.account_number}</div>
-        </div>
-        <div class="text-right">
-          <div class="font-bold text-emerald-400">₹${parseFloat(a.balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
-          <div class="text-[10px] text-slate-500 mt-0.5 uppercase">${a.ifsc}</div>
-        </div>
-      </div>
-    `).join('');
+  // Form 2: Change Password
+  const pwdForm = document.getElementById('form-password');
+  if (pwdForm) {
+    pwdForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const current_password = document.getElementById('curr-password').value;
+      const new_password     = document.getElementById('new-password').value;
+
+      try {
+        const res = await fetch('/api/profile/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ current_password, new_password })
+        });
+        const json = await res.json();
+        if (res.ok) {
+          showToast(json.message || 'Password changed successfully!', true);
+          closeModal('modal-password');
+          pwdForm.reset();
+        } else {
+          showToast(json.error || 'Failed to change password.', false);
+        }
+      } catch (err) {
+        showToast('Network error while changing password.', false);
+      }
+    });
   }
 });
 </script>

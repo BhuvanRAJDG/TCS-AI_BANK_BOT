@@ -1,21 +1,11 @@
 """
 app/routes/chat.py
 JWT-protected chat API and chat page.
-
-POST /api/chat
-    Body:  { "message": str, "clear_history": bool }
-    Returns:
-    {
-        "response":   str,
-        "intent":     str,
-        "route":      "sql" | "rag",
-        "citations":  list[str],
-        "latency_ms": int
-    }
 """
 from flask import Blueprint, render_template, request, jsonify, g
 from app.services.ai_chat_service import chat, clear_history, get_history
 from app.models import CustomerProfile
+from app.services.profile_service import ProfileService
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -50,11 +40,9 @@ def api_chat():
     if len(message) > 1000:
         return jsonify({"error": "Message too long (max 1000 characters)"}), 400
 
-    # Optional: clear conversation history
     if body.get("clear_history"):
         clear_history(user.id)
 
-    # Resolve customer_id from the authenticated user
     customer    = CustomerProfile.query.filter_by(user_id=user.id).first()
     customer_id = customer.id if customer else None
 
@@ -90,19 +78,16 @@ def api_transfer_confirm():
     if not pin:
         return jsonify({"error": "UPI PIN or account password is required"}), 400
 
-    from app.security import verify_password
-    is_valid_pin = pin in ('1234', '123456', '9999')
-    is_valid_password = verify_password(pin, user.password_hash)
-
-    if not (is_valid_pin or is_valid_password):
-        return jsonify({"error": "Incorrect UPI PIN or password. Demo PIN is 1234 or your account password."}), 400
+    if not ProfileService.verify_user_upi_pin(user.id, pin):
+        return jsonify({"error": "Incorrect UPI PIN or account password."}), 400
 
     customer = CustomerProfile.query.filter_by(user_id=user.id).first()
-    customer_id = customer.id if customer else 1
+    if not customer:
+        return jsonify({"error": "Customer account profile not found."}), 400
 
     try:
         from app.services.transaction_service import TransactionService
-        receipt = TransactionService.process_transfer(customer_id, recipient, amount)
+        receipt = TransactionService.process_transfer(customer.id, recipient, amount)
 
         response_text = (
             f"✅ **Money Transfer Successful!**\n\n"
@@ -112,7 +97,7 @@ def api_transfer_confirm():
             f"• **Payment Channel:** CBS FastPay UPI\n"
             f"• **Date & Time:** {receipt['timestamp']}\n"
             f"• **Updated Available Balance:** ₹{receipt['new_balance']:,.2f}\n\n"
-            f"*(Authorized with UPI PIN • Bank records updated in real-time)*"
+            f"*(Authorized with your secure UPI PIN • Bank records updated in real-time)*"
         )
         return jsonify({
             "status": "success",

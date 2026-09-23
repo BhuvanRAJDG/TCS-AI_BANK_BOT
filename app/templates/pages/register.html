@@ -1,11 +1,15 @@
-{% extends "auth_base.html" %}
+import os
+
+BASE_DIR = r"c:\Users\govin\.gemini\antigravity-ide\brain\23fca354-39a8-4af5-ba99-1363e3cbba06\sentinelbank-ai"
+
+REGISTER_HTML_CODE = """{% extends "auth_base.html" %}
 {% block title %}Create Account — CBS Bank AI{% endblock %}
 
 {% block content %}
 <div class="w-full max-w-md glass-card p-8 rounded-3xl border border-slate-800 shadow-2xl shadow-blue-900/20 backdrop-blur-xl">
   <div class="text-center mb-6">
     <h2 class="text-2xl font-bold text-white tracking-tight">Create Account</h2>
-    <p class="text-xs text-slate-400 mt-1.5">Join CBS Bank Next-Gen AI Banking</p>
+    <p class="text-xs text-slate-400 mt-1.5">Join CBS Bank Next-Gen AI Banking Portal</p>
   </div>
   
   <div id="error-alert" class="hidden mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-medium"></div>
@@ -20,24 +24,30 @@
       <label class="block text-xs font-medium text-slate-300 mb-1.5">Email Address</label>
       <input type="email" id="email" name="email" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="aarav@example.com">
     </div>
-    <div>
-      <label class="block text-xs font-medium text-slate-300 mb-1.5">Preferred Language</label>
-      <select id="preferred_language" name="preferred_language" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm bg-slate-900 text-white outline-none">
-        <option value="en">English</option>
-        <option value="hi">Hindi (हिंदी)</option>
-        <option value="kn">Kannada (ಕನ್ನಡ)</option>
-      </select>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-1.5">Preferred Language</label>
+        <select id="preferred_language" name="preferred_language" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs bg-slate-900 text-white outline-none">
+          <option value="en">English</option>
+          <option value="hi">Hindi (हिंदी)</option>
+          <option value="kn">Kannada (ಕನ್ನಡ)</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-1.5">UPI PIN (4-6 digits)</label>
+        <input type="password" id="upi_pin" name="upi_pin" maxlength="6" inputmode="numeric" placeholder="1234" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs text-white placeholder-slate-500 outline-none font-mono">
+      </div>
     </div>
     <div>
       <label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
-      <input type="password" id="password" name="password" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="••••••••">
+      <input type="password" id="password" name="password" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="Min 8 chars (Upper, lower, digit, symbol)">
     </div>
     <div>
       <label class="block text-xs font-medium text-slate-300 mb-1.5">Confirm Password</label>
       <input type="password" id="confirm_password" name="confirm_password" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="••••••••">
     </div>
     <button type="submit" id="submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 font-semibold text-sm text-white shadow-lg shadow-blue-600/30 hover:opacity-95 active:scale-[0.99] transition duration-200">
-      Register Account
+      Open Account & Register →
     </button>
   </form>
 
@@ -56,11 +66,12 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
   errBox.classList.add('hidden');
   infoBox.classList.add('hidden');
   submitBtn.disabled = true;
-  submitBtn.innerText = 'Registering...';
+  submitBtn.innerText = 'Creating Account & Setting Up CBS Ledger...';
 
   const name = document.getElementById('full_name').value.trim();
   const email = document.getElementById('email').value.trim();
   const preferred_language = document.getElementById('preferred_language').value;
+  const upi_pin = document.getElementById('upi_pin').value.trim() || '1234';
   const password = document.getElementById('password').value;
   const confirm_password = document.getElementById('confirm_password').value;
 
@@ -68,7 +79,7 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
     const res = await fetch('/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, preferred_language, password, confirm_password })
+      body: JSON.stringify({ name, email, preferred_language, upi_pin, password, confirm_password })
     });
 
     const data = await res.json();
@@ -81,19 +92,28 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
       errBox.innerText = errMsg || 'Registration failed.';
       errBox.classList.remove('hidden');
       submitBtn.disabled = false;
-      submitBtn.innerText = 'Register Account';
+      submitBtn.innerText = 'Open Account & Register →';
       return;
     }
 
-    infoBox.innerText = 'Account created successfully! Redirecting to login...';
+    infoBox.innerText = 'Account & CBS Savings Passbook created! Redirecting to login...';
     infoBox.classList.remove('hidden');
-    setTimeout(() => { window.location.href = '/login'; }, 1000);
+    setTimeout(() => { window.location.href = '/login'; }, 1200);
   } catch (err) {
     errBox.innerText = 'Network error during registration. Please try again.';
     errBox.classList.remove('hidden');
     submitBtn.disabled = false;
-    submitBtn.innerText = 'Register Account';
+    submitBtn.innerText = 'Open Account & Register →';
   }
 });
 </script>
 {% endblock %}
+"""
+
+with open(os.path.join(BASE_DIR, 'app', 'templates', 'pages', 'register.html'), 'w', encoding='utf-8') as f:
+    f.write(REGISTER_HTML_CODE.strip())
+print("Updated app/templates/pages/register.html")
+"""
+
+with open(os.path.join(BASE_DIR, 'scratch', 'update_register.py'), 'w', encoding='utf-8') as f:
+    f.write(REGISTER_HTML_CODE)
