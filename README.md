@@ -289,3 +289,4 @@ Open:
 Developed as an enterprise AI banking solution for **TCS Technology Day**.
 
 Built with ❤️ using Flask, MySQL, ChromaDB & GPT-4o.
+-Bhuvan Raj D G
