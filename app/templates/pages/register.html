@@ -1,47 +1,48 @@
-{% extends "base.html" %}
-{% block title %}Register — SentinelBank AI{% endblock %}
+{% extends "auth_base.html" %}
+{% block title %}Create Account — CBS Bank AI{% endblock %}
+
 {% block content %}
-<div class="max-w-md mx-auto my-12 glass-card p-8">
+<div class="w-full max-w-md glass-card p-8 rounded-3xl border border-slate-800 shadow-2xl shadow-blue-900/20 backdrop-blur-xl">
   <div class="text-center mb-6">
-    <h2 class="text-2xl font-bold text-white">Create Account</h2>
-    <p class="text-xs text-slate-400 mt-1">Join SentinelBank AI Banking Ecosystem</p>
+    <h2 class="text-2xl font-bold text-white tracking-tight">Create Account</h2>
+    <p class="text-xs text-slate-400 mt-1.5">Join CBS Bank Next-Gen AI Banking</p>
   </div>
   
-  <div id="error-alert" class="hidden mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-300 text-xs font-medium"></div>
-  <div id="info-alert" class="hidden mb-4 p-3 rounded-lg bg-blue-500/20 border border-blue-500/50 text-blue-300 text-xs font-medium"></div>
+  <div id="error-alert" class="hidden mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-medium"></div>
+  <div id="info-alert" class="hidden mb-4 p-3 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs font-medium"></div>
 
   <form id="register-form" class="space-y-4">
     <div>
-      <label class="block text-xs font-medium text-slate-300 mb-1">Full Name</label>
-      <input type="text" id="full_name" name="full_name" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="Aarav Sharma">
+      <label class="block text-xs font-medium text-slate-300 mb-1.5">Full Name</label>
+      <input type="text" id="full_name" name="full_name" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="Aarav Sharma">
     </div>
     <div>
-      <label class="block text-xs font-medium text-slate-300 mb-1">Email Address</label>
-      <input type="email" id="email" name="email" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="aarav@example.com">
+      <label class="block text-xs font-medium text-slate-300 mb-1.5">Email Address</label>
+      <input type="email" id="email" name="email" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="aarav@example.com">
     </div>
     <div>
-      <label class="block text-xs font-medium text-slate-300 mb-1">Preferred Language</label>
-      <select id="preferred_language" name="preferred_language" class="w-full px-4 py-2.5 rounded-lg glass-input text-sm bg-slate-900">
+      <label class="block text-xs font-medium text-slate-300 mb-1.5">Preferred Language</label>
+      <select id="preferred_language" name="preferred_language" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm bg-slate-900 text-white outline-none">
         <option value="en">English</option>
         <option value="hi">Hindi (हिंदी)</option>
         <option value="kn">Kannada (ಕನ್ನಡ)</option>
       </select>
     </div>
     <div>
-      <label class="block text-xs font-medium text-slate-300 mb-1">Password</label>
-      <input type="password" id="password" name="password" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="••••••••">
+      <label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+      <input type="password" id="password" name="password" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="••••••••">
     </div>
     <div>
-      <label class="block text-xs font-medium text-slate-300 mb-1">Confirm Password</label>
-      <input type="password" id="confirm_password" name="confirm_password" required class="w-full px-4 py-2.5 rounded-lg glass-input text-sm" placeholder="••••••••">
+      <label class="block text-xs font-medium text-slate-300 mb-1.5">Confirm Password</label>
+      <input type="password" id="confirm_password" name="confirm_password" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-white placeholder-slate-500 outline-none transition" placeholder="••••••••">
     </div>
-    <button type="submit" id="submit-btn" class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 font-semibold text-sm hover:opacity-90 transition">
+    <button type="submit" id="submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 font-semibold text-sm text-white shadow-lg shadow-blue-600/30 hover:opacity-95 active:scale-[0.99] transition duration-200">
       Register Account
     </button>
   </form>
 
   <p class="text-xs text-center text-slate-400 mt-6">
-    Already have an account? <a href="/login" class="text-blue-400 font-medium hover:underline">Sign in here</a>
+    Already have an account? <a href="/login" class="text-blue-400 font-medium hover:text-blue-300 hover:underline">Sign in here</a>
   </p>
 </div>
 
@@ -86,7 +87,7 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
 
     infoBox.innerText = 'Account created successfully! Redirecting to login...';
     infoBox.classList.remove('hidden');
-    setTimeout(() => { window.location.href = '/login'; }, 1200);
+    setTimeout(() => { window.location.href = '/login'; }, 1000);
   } catch (err) {
     errBox.innerText = 'Network error during registration. Please try again.';
     errBox.classList.remove('hidden');

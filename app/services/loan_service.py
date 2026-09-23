@@ -68,3 +68,59 @@ class LoanService:
             'remarks':    cs.remarks,
             'updated_at': cs.recorded_at.strftime("%Y-%m-%d") if cs.recorded_at else 'Recently'
         }
+
+    @staticmethod
+    def pay_emi(customer_id: int, emi_id: int):
+        from app.models import Account, Transaction
+        from datetime import datetime
+        import uuid
+
+        emi = EMI.query.get(emi_id)
+        if not emi:
+            raise ValueError("EMI installment record not found.")
+
+        loan = Loan.query.filter_by(id=emi.loan_id, customer_id=customer_id).first()
+        if not loan:
+            raise ValueError("Unauthorized to pay this EMI installment.")
+
+        if emi.status == 'paid':
+            raise ValueError("This EMI installment has already been paid.")
+
+        account = Account.query.filter_by(customer_id=customer_id, is_active=True).first()
+        if not account:
+            raise ValueError("No active bank account found for EMI deduction.")
+
+        if account.balance < emi.total_amount:
+            raise ValueError(f"Insufficient funds. Required: ₹{emi.total_amount:,.2f}, Available: ₹{account.balance:,.2f}")
+
+        # Deduct balance
+        account.balance -= emi.total_amount
+        emi.status = 'paid'
+        emi.payment_date = datetime.utcnow().date()
+        loan.outstanding = max(0.0, float(loan.outstanding or 0.0) - float(emi.principal or 0.0))
+
+        ref_id = "EMI" + uuid.uuid4().hex[:10].upper()
+        tx = Transaction(
+            account_id=account.id,
+            amount=emi.total_amount,
+            transaction_type='debit',
+            description=f"EMI Repayment - {loan.loan_type} Installment #{emi.installment_no}",
+            category='emi',
+            reference_id=ref_id,
+            merchant=f"CBS Bank Loan Repayment ({loan.loan_type})",
+            channel='autopay',
+            timestamp=datetime.utcnow(),
+            balance_after=account.balance
+        )
+        db.session.add(tx)
+        db.session.commit()
+
+        return {
+            'status': 'success',
+            'reference_id': ref_id,
+            'installment_no': emi.installment_no,
+            'amount_paid': emi.total_amount,
+            'remaining_outstanding': loan.outstanding,
+            'new_balance': account.balance
+        }
+

@@ -1,21 +1,183 @@
 {% extends "base.html" %}
-{% block title %}EMI Schedules — SentinelBank AI{% endblock %}
+{% block title %}EMI Schedules — CBS Bank AI{% endblock %}
 {% block header_title %}EMI Repayment Schedule{% endblock %}
 
 {% block content %}
-<div class="glass-card p-6">
-  <h3 class="text-sm font-semibold text-slate-200 mb-4">Upcoming Installments</h3>
-  <div class="space-y-3 text-xs">
-    <div class="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
+<div class="space-y-6 max-w-4xl mx-auto">
+  <div class="glass-card p-6 rounded-3xl border border-slate-800">
+    <div class="flex items-center justify-between mb-4">
       <div>
-        <div class="font-semibold text-slate-100">Home Loan — Installment #24</div>
-        <div class="text-slate-400">Due: Oct 05, 2026</div>
+        <h3 class="text-base font-bold text-white">Upcoming Loan Installments</h3>
+        <p class="text-xs text-slate-400">View and pay your pending EMIs in real-time</p>
       </div>
-      <div class="text-right">
-        <div class="font-bold text-emerald-400">₹38,750</div>
-        <span class="text-[10px] text-amber-400">Autopay Scheduled</span>
+      <a href="/loans" class="text-xs text-blue-400 hover:text-blue-300 font-medium">View All Loans →</a>
+    </div>
+
+    <div id="emi-list-container" class="space-y-3">
+      <div class="p-6 text-center text-xs text-slate-400">
+        <span class="animate-spin inline-block mr-2">⏳</span> Loading EMI schedule...
       </div>
     </div>
   </div>
 </div>
+
+<!-- EMI UPI PIN Confirmation Modal -->
+<div id="emi-pin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+  <div class="glass-card max-w-sm w-full p-6 rounded-3xl border border-slate-700 shadow-2xl relative text-center">
+    <button onclick="closeEmiPinModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-500 text-white flex items-center justify-center mx-auto mb-3 text-xl shadow-lg shadow-blue-500/30">
+      🏦
+    </div>
+    <h3 class="text-base font-bold text-white mb-1">Confirm EMI Payment</h3>
+    <p class="text-xs text-slate-400 mb-4">Enter your 4-digit UPI PIN or account password to authorize EMI deduction</p>
+
+    <div class="p-3 mb-4 rounded-xl bg-slate-900/80 border border-slate-800 text-left">
+      <div class="flex justify-between text-xs py-1">
+        <span class="text-slate-400">Installment:</span>
+        <span id="modal-emi-title" class="font-bold text-white">Installment</span>
+      </div>
+      <div class="flex justify-between text-xs py-1 border-t border-slate-800">
+        <span class="text-slate-400">Amount Due:</span>
+        <span id="modal-emi-amount" class="font-bold text-emerald-400 font-mono text-sm">₹0.00</span>
+      </div>
+    </div>
+
+    <div id="emi-pin-error" class="hidden mb-3 p-2.5 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-medium text-left"></div>
+
+    <form id="emi-pin-form" onsubmit="submitEmiPayment(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-1 text-left">Enter UPI PIN</label>
+        <input type="password" id="emi-pin-input" maxlength="20" placeholder="••••" required class="w-full text-center text-2xl tracking-[0.5em] font-mono py-2.5 rounded-xl glass-input text-white border-blue-500/40 focus:border-blue-500 outline-none">
+      </div>
+      
+      <div class="p-2 rounded-lg bg-slate-800/60 text-[10px] text-slate-400">
+        💡 Demo PIN: <code class="text-amber-400 font-mono font-bold">1234</code> or your login password
+      </div>
+
+      <div class="flex space-x-3 pt-1">
+        <button type="button" onclick="closeEmiPinModal()" class="w-1/2 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition">Cancel</button>
+        <button type="submit" id="confirm-emi-btn" class="w-1/2 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 text-white text-xs font-semibold hover:opacity-95 shadow-lg shadow-blue-600/30 transition">Pay EMI</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let pendingEmiId = null;
+
+async function loadEmis() {
+  const container = document.getElementById('emi-list-container');
+  try {
+    const res = await fetch('/api/emis');
+    const json = await res.json();
+    const emis = json.data || [];
+
+    if (emis.length === 0) {
+      container.innerHTML = `
+        <div class="p-8 text-center text-slate-400 text-xs">
+          <p class="text-2xl mb-2">🎉</p>
+          <p class="font-medium text-slate-200">No pending EMIs found</p>
+          <p class="mt-1">All your active loan payments are up to date.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = emis.map(e => {
+      const isPaid = e.status === 'paid';
+      return `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl gap-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-semibold text-slate-100 text-sm">Loan Installment #${e.installment_number}</span>
+              ${isPaid 
+                ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">✓ Paid</span>' 
+                : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400">Pending</span>'}
+            </div>
+            <div class="text-xs text-slate-400 mt-1">
+              Due Date: <span class="text-slate-200 font-medium">${e.due_date}</span> • Principal: ₹${e.principal_component.toLocaleString('en-IN')} • Interest: ₹${e.interest_component.toLocaleString('en-IN')}
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <div class="font-bold text-white text-base">₹${e.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+              <div class="text-[10px] text-slate-400">${isPaid ? 'Settled from account' : 'Due via Autopay / Instant'}</div>
+            </div>
+            ${!isPaid ? `
+              <button onclick="openEmiPinModal(${e.id}, ${e.installment_number}, ${e.amount})" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:opacity-90 text-white text-xs font-semibold shadow-md transition">
+                Pay Now
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = `<div class="p-6 text-center text-rose-400 text-xs">Failed to load EMI schedule.</div>`;
+  }
+}
+
+function openEmiPinModal(emiId, installmentNo, amount) {
+  pendingEmiId = emiId;
+  document.getElementById('modal-emi-title').textContent = `Installment #${installmentNo}`;
+  document.getElementById('modal-emi-amount').textContent = `₹${parseFloat(amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+  document.getElementById('emi-pin-input').value = '';
+  document.getElementById('emi-pin-error').classList.add('hidden');
+  document.getElementById('emi-pin-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('emi-pin-input').focus(), 100);
+}
+
+function closeEmiPinModal() {
+  document.getElementById('emi-pin-modal').classList.add('hidden');
+  pendingEmiId = null;
+}
+
+async function submitEmiPayment(e) {
+  if (e) e.preventDefault();
+  if (!pendingEmiId) return;
+
+  const pin = document.getElementById('emi-pin-input').value.trim();
+  const errBox = document.getElementById('emi-pin-error');
+  const btn = document.getElementById('confirm-emi-btn');
+
+  if (!pin) {
+    errBox.textContent = 'Please enter your UPI PIN or password.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  errBox.classList.add('hidden');
+  btn.disabled = true;
+  btn.innerText = 'Processing...';
+
+  try {
+    const res = await fetch(`/api/emis/${pendingEmiId}/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errBox.textContent = data.error || 'Payment failed. Check your PIN or balance.';
+      errBox.classList.remove('hidden');
+      btn.disabled = false;
+      btn.innerText = 'Pay EMI';
+      return;
+    }
+
+    closeEmiPinModal();
+    alert(`✅ EMI Payment Successful!\nReference ID: ${data.reference_id}\nRemaining Loan Outstanding: ₹${data.remaining_outstanding.toLocaleString('en-IN')}`);
+    await loadEmis();
+  } catch (err) {
+    errBox.textContent = 'Network error while processing EMI payment.';
+    errBox.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Pay EMI';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadEmis);
+</script>
 {% endblock %}

@@ -24,11 +24,12 @@ log = logging.getLogger(__name__)
 
 # ── Intent detection ──────────────────────────────────────────────────────────
 _SQL_PATTERNS: list[tuple[str, list[str]]] = [
-    ("balance",       ["balance", "how much", "account balance", "funds", "money left", "amount in"]),
+    ("balance",       ["balance", "how much", "account balance", "funds", "money left", "amount in", "net worth", "savings account", "current account"]),
     ("transactions",  ["transaction", "recent payment", "last payment", "spent on", "debited", "credited",
-                       "statement", "history", "purchase"]),
-    ("emi",           ["emi", "installment", "repayment", "loan payment", "next emi", "due date"]),
-    ("loans",         ["loan", "outstanding loan", "home loan status", "personal loan status"]),
+                       "statement", "history", "purchase", "recent activity", "expense history", "spending"]),
+    ("emi",           ["emi", "installment", "repayment", "loan payment", "next emi", "due date", "pay emi", "pending emi", "pay off emi"]),
+    ("loans",         ["loan", "outstanding loan", "home loan status", "personal loan status", "car loan", "borrowed"]),
+    ("expense_splits",["split", "owe", "shared bill", "trip expense", "group bill", "settle share", "bill split", "friend owe"]),
     ("credit_score",  ["credit score", "cibil", "credit rating", "credit report"]),
 ]
 _RAG_PATTERNS: list[tuple[str, list[str]]] = [
@@ -82,14 +83,15 @@ def _classify_intent(query: str) -> tuple[str, str]:
 
 # ── SQL data fetcher ──────────────────────────────────────────────────────────
 def _fetch_sql_context(intent: str, customer_id: int) -> str:
-    """Fetch structured banking data from MySQL based on intent."""
+    """Fetch structured banking data from database based on intent."""
     try:
         from app import db
         from app.models import Account, Transaction, Loan, EMI, CreditScore
+        from app.models.expense_split import ExpenseSplit, ExpenseSplitParticipant
 
         if intent == "balance":
             accounts = Account.query.filter_by(customer_id=customer_id, is_active=True).all()
-            lines = [f"Account ({a.account_type}): {a.account_number} — Balance: ₹{a.balance:,.2f}"
+            lines = [f"• {a.account_type.capitalize()} Account ({a.account_number[-4:]}): ₹{a.balance:,.2f} (IFSC: {a.ifsc_code})"
                      for a in accounts]
             return "Customer Account Balances:\n" + "\n".join(lines) if lines else "No active accounts found."
 
@@ -100,11 +102,10 @@ def _fetch_sql_context(intent: str, customer_id: int) -> str:
                 Transaction.account_id.in_(account_ids)
             ).order_by(Transaction.timestamp.desc()).limit(10).all()
             lines = [
-                f"{tx.timestamp.strftime('%Y-%m-%d')} | {tx.transaction_type.upper()} | "
-                f"₹{tx.amount:,.2f} | {tx.merchant or tx.description or 'Transfer'} | {tx.category}"
+                f"• {tx.timestamp.strftime('%d %b %Y')} | {tx.transaction_type.upper()} ₹{tx.amount:,.2f} | {tx.merchant or tx.description or 'Transfer'} ({tx.category})"
                 for tx in txs
             ]
-            return "Recent 10 Transactions:\n" + "\n".join(lines) if lines else "No recent transactions."
+            return "Recent 10 Transactions (Real-Time Data):\n" + "\n".join(lines) if lines else "No recent transactions found."
 
         elif intent == "emi":
             loans = Loan.query.filter_by(customer_id=customer_id, status='active').all()
@@ -113,39 +114,54 @@ def _fetch_sql_context(intent: str, customer_id: int) -> str:
                 EMI.loan_id.in_(loan_ids), EMI.status == 'pending'
             ).order_by(EMI.due_date.asc()).limit(6).all()
             lines = [
-                f"EMI #{e.installment_no} | Due: {e.due_date.strftime('%Y-%m-%d')} | "
-                f"₹{e.total_amount:,.2f} (Principal: ₹{e.principal:,.2f}, Interest: ₹{e.interest:,.2f})"
+                f"• EMI #{e.installment_no} | Due: {e.due_date.strftime('%d %b %Y')} | "
+                f"Amount: ₹{e.total_amount:,.2f} (Principal: ₹{e.principal:,.2f}, Interest: ₹{e.interest:,.2f})"
                 for e in emis
             ]
-            return "Upcoming EMIs:\n" + "\n".join(lines) if lines else "No pending EMIs."
+            prompt_note = "\n\n(Note for CBS Bot: Proactively ask the user if they would like to pay off their upcoming EMI right now by visiting the Loans section!)."
+            return ("Upcoming Pending EMIs:\n" + "\n".join(lines) + prompt_note) if lines else "You currently have no pending EMI installments."
+
+        elif intent == "expense_splits":
+            user_participations = ExpenseSplitParticipant.query.filter_by(customer_id=customer_id).all()
+            split_ids = {p.split_id for p in user_participations}
+            user_splits = ExpenseSplit.query.filter(ExpenseSplit.id.in_(split_ids)).order_by(ExpenseSplit.created_at.desc()).all()
+            
+            lines = []
+            for s in user_splits:
+                user_p = next((p for p in s.participants if p.customer_id == customer_id), None)
+                status_str = "Paid ✓" if (user_p and user_p.paid) else f"Unpaid Share: ₹{user_p.share_amount:,.2f}" if user_p else ""
+                lines.append(f"• Group: '{s.title}' | Total Spend: ₹{s.total_amount:,.2f} | Your Status: {status_str}")
+
+            prompt_note = "\n\n(Note for CBS Bot: Proactively ask the user if they would like to settle up their pending bill splits now on the Split Expenses page!)."
+            return ("Active Group Expense Splits:\n" + "\n".join(lines) + prompt_note) if lines else "No active group expense splits found."
 
         elif intent == "loans":
             loans = Loan.query.filter_by(customer_id=customer_id).all()
             lines = [
-                f"{l.loan_type} | Amount: ₹{l.loan_amount:,.2f} | Outstanding: ₹{l.outstanding:,.2f} | "
-                f"Rate: {l.interest_rate}% | Status: {l.status}"
+                f"• {l.loan_type} | Sanctioned Amount: ₹{l.loan_amount:,.2f} | Outstanding Balance: ₹{l.outstanding:,.2f} | "
+                f"Interest Rate: {l.interest_rate}% | Status: {l.status.upper()}"
                 for l in loans
             ]
-            return "Loan Portfolio:\n" + "\n".join(lines) if lines else "No loans found."
+            return "Loan Portfolio Details:\n" + "\n".join(lines) if lines else "No loans found in your profile."
 
         elif intent == "credit_score":
             cs = CreditScore.query.filter_by(customer_id=customer_id).order_by(
                 CreditScore.recorded_at.desc()).first()
             if cs:
-                return (f"CIBIL Credit Score: {cs.score}\nBureau: {cs.bureau}\n"
-                        f"Remarks: {cs.remarks}\nLast Updated: {cs.recorded_at.strftime('%Y-%m-%d')}")
-            return "Credit score not found."
+                return (f"CIBIL Credit Score: {cs.score} / 900\nBureau: {cs.bureau}\n"
+                        f"Status Rating: {cs.remarks}\nLast Evaluated: {cs.recorded_at.strftime('%d %b %Y')}")
+            return "Credit score details currently unavailable."
 
-        return "Data not available."
+        return "Requested data not found."
 
     except Exception as exc:
         log.error("SQL fetch error for intent '%s': %s", intent, exc)
         return "Unable to fetch account data at this moment."
 
 
-# ── OpenAI / Gemini call ───────────────────────────────────────────────────────
+# ── OpenAI / Gemini call with Retry Backoff ──────────────────────────────────
 def _call_llm(system_prompt: str, user_message: str,
-               history: list[dict], timeout: int = 12) -> str:
+               history: list[dict], timeout: int = 15) -> str:
     from dotenv import load_dotenv
     load_dotenv(override=True)
 
@@ -173,25 +189,57 @@ def _call_llm(system_prompt: str, user_message: str,
             messages.append({"role": turn["role"], "content": turn["content"]})
         messages.append({"role": "user", "content": user_message})
 
-        resp = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            max_tokens=600,
-            temperature=0.3,
-        )
-        return resp.choices[0].message.content.strip()
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=600,
+                    temperature=0.3,
+                )
+                return resp.choices[0].message.content.strip()
+            except openai.RateLimitError:
+                if attempt < max_retries - 1:
+                    time.sleep(2.5 * (attempt + 1))
+                else:
+                    raise
 
     except ImportError:
         return ("OpenAI package not installed. Run: pip install openai")
     except openai.AuthenticationError:
         return "Invalid API key. Please check LLM_API_KEY in your .env file."
     except openai.RateLimitError:
-        return "LLM rate limit reached. Please try again in a moment."
+        return "CSB Bot is currently experiencing high demand. Please try sending your query again in a few seconds."
     except openai.APITimeoutError:
-        return "The AI response timed out (12s limit). Please try a simpler query."
+        return "The AI response timed out (15s limit). Please try a simpler query."
     except Exception as exc:
         log.error("LLM call failed: %s", exc)
-        return f"AI service temporarily unavailable. Please try again. (Error: {type(exc).__name__})"
+        return f"CSB Bot is temporarily unavailable. Please try again. (Error: {type(exc).__name__})"
+
+
+def _match_transfer_command(query: str) -> tuple[str, float] | None:
+    """Regex pattern matcher to extract (recipient_name, amount) from natural language query."""
+    q = query.strip()
+    # Pattern 1: "transfer 500 to Priya", "pay 1200 to Rohit", "send 350 to Aarav"
+    m1 = re.search(r"(?:transfer|send|pay|remit)\s+(?:₹\s*)?(\d+(?:\.\d{1,2})?)\s+(?:to|for)\s+([A-Za-z0-9\s]+)", q, re.I)
+    if m1:
+        try:
+            return m1.group(2).strip(), float(m1.group(1))
+        except ValueError:
+            pass
+
+    # Pattern 2: "pay Priya 500", "send Aarav 1000"
+    m2 = re.search(r"(?:transfer|send|pay|remit)\s+([A-Za-z\s]+?)\s+(?:₹\s*)?(\d+(?:\.\d{1,2})?)", q, re.I)
+    if m2:
+        try:
+            name = m2.group(1).strip()
+            if name.lower() not in ("my", "the", "an", "a", "money", "funds", "emi", "bill", "bills"):
+                return name, float(m2.group(2))
+        except ValueError:
+            pass
+
+    return None
 
 
 # ── Main orchestrator ─────────────────────────────────────────────────────────
@@ -223,6 +271,27 @@ def process_query(query: str, customer_id: int,
 
     safe_query = _mask_pii(query)
 
+    # ── Check for direct transfer / payment command ────────────────────────────
+    transfer_match = _match_transfer_command(safe_query)
+    if transfer_match:
+        target_name, amount = transfer_match
+        response_text = (
+            f"🔒 **Transfer Authorization Required**\n\n"
+            f"You are initiating a transfer of **₹{amount:,.2f}** to **{target_name}** via CBS FastPay UPI.\n\n"
+            f"Please authorize this transaction with your **UPI PIN** (Demo: `1234`) or account password in the confirmation prompt below."
+        )
+        return {
+            "response": response_text,
+            "intent": "transfer_pending",
+            "route": "sql",
+            "citations": [],
+            "transfer_data": {
+                "recipient": target_name,
+                "amount": amount
+            },
+            "latency_ms": int((time.monotonic() - t0) * 1000),
+        }
+
     # ── Intent classification ─────────────────────────────────────────────────
     route, intent = _classify_intent(safe_query)
 
@@ -232,38 +301,43 @@ def process_query(query: str, customer_id: int,
         # ── Route A: structured banking data ─────────────────────────────────
         context = _fetch_sql_context(intent, customer_id)
         system_prompt = textwrap.dedent(f"""
-            You are SentinelBank AI Copilot, a trusted banking assistant.
+            You are CBS Bot, the intelligent, friendly, and secure AI Banking Assistant for CBS Bank.
             You have access to the customer's real account data below.
-            Answer the customer's question accurately and concisely using the data.
+            Answer the customer's question accurately, warmly, and concisely using the data.
             Never reveal full account numbers — use masked versions.
-            Format currency in Indian Rupees (₹). Be brief and professional.
+            Format currency in Indian Rupees (₹). Be clear, concise, and professional.
 
             --- CUSTOMER ACCOUNT DATA ---
             {context}
         """).strip()
 
     else:
-        # ── Route B: RAG document retrieval ──────────────────────────────────
+        # ── Route B: RAG document retrieval + General AI Conversational Intelligence ──────────────────
         from app.rag.retriever import retrieve
         rag_result = retrieve(safe_query)
         context    = rag_result["context"]
         citations  = rag_result["citations"]
 
-        if not context:
-            context = "No relevant policy documents found."
-
         system_prompt = textwrap.dedent(f"""
-            You are SentinelBank AI Copilot, a knowledgeable banking assistant.
-            Answer using the provided SentinelBank policy context.
-            If the answer is not in the context, say so honestly — do not fabricate.
-            Be concise, clear, and professional.
+            You are CBS Bot, the intelligent, friendly, and highly capable AI Banking Assistant for CBS Bank.
+            You help customers with banking questions, financial calculations, policy explanations, account guidance, and general conversation.
 
-            --- POLICY CONTEXT ---
-            {context}
+            GUIDELINES:
+            1. Always identify as CBS Bot when asked about your identity.
+            2. Be warm, professional, helpful, and highly responsive to ANY user query or greeting.
+            3. Use the provided CBS Bank policy context below if relevant. If the context does not contain the answer or if the user is asking a general question (such as greetings, financial advice, math, or banking terminology), answer using your broad financial knowledge politely and accurately.
+            4. Format numbers cleanly and use Indian Rupees (₹) when referencing Indian financial figures.
+
+            --- POLICY / KNOWLEDGE CONTEXT ---
+            {context if context else "No specific document matched."}
         """).strip()
 
     # ── LLM call ──────────────────────────────────────────────────────────────
     response = _call_llm(system_prompt, safe_query, history)
+
+    # Guaranteed fallback to direct structured data if LLM is rate-limited on SQL queries
+    if route == "sql" and any(k in response for k in ("high demand", "unavailable", "rate limit", "timed out")):
+        response = f"Here is your requested real-time CBS Bank data:\n\n{context}"
 
     # ── Audit log ─────────────────────────────────────────────────────────────
     try:

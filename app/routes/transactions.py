@@ -21,3 +21,7 @@ def api_list():
 @transactions_bp.route('/api/transactions/<int:tx_id>', methods=['GET'])
 def api_detail(tx_id):
     return TransactionController.get_transaction_detail(tx_id)
+
+@transactions_bp.route('/api/transactions/transfer', methods=['POST'])
+def api_transfer():
+    return TransactionController.transfer_money()

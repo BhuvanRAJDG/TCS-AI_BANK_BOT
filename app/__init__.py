@@ -115,6 +115,30 @@ def create_app(config_object: object = Config) -> Flask:
             except Exception:
                 g.current_user = None
 
+    # ── Session auth guard (protect all application pages and APIs) ───────────
+    from flask import redirect
+
+    @app.before_request
+    def enforce_auth_guard():
+        path = request.path
+        # Exclude static assets, health check, and auth endpoints
+        if (
+            path.startswith('/static/') or
+            path.startswith('/auth/') or
+            path in ('/health', '/login', '/register', '/otp')
+        ):
+            return
+
+        if path == '/':
+            if g.current_user:
+                return redirect('/dashboard')
+            return redirect('/login')
+
+        if not g.current_user:
+            if path.startswith('/api/'):
+                return jsonify({'error': 'Unauthorized — please log in'}), 401
+            return redirect('/login')
+
     # ── Global JSON error handlers ────────────────────────────────────────────
     @app.errorhandler(400)
     def bad_request(e):
@@ -143,17 +167,21 @@ def create_app(config_object: object = Config) -> Flask:
     # ── Health check ──────────────────────────────────────────────────────────
     @app.route('/health')
     def health():
-        return jsonify({'status': 'ok', 'service': 'SentinelBank AI'}), 200
+        return jsonify({'status': 'ok', 'service': 'CBS Bank AI'}), 200
 
     # ── Auth page routes (root-level, not under /auth prefix) ─────────────────
     from flask import render_template
 
     @app.route('/login')
     def login_page():
+        if g.current_user:
+            return redirect('/dashboard')
         return render_template('pages/login.html')
 
     @app.route('/register')
     def register_page():
+        if g.current_user:
+            return redirect('/dashboard')
         return render_template('pages/register.html')
 
     @app.route('/otp')

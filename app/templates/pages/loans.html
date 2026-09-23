@@ -1,37 +1,103 @@
 {% extends "base.html" %}
-{% block title %}Loans — SentinelBank AI{% endblock %}
+{% block title %}Loans & Credit — CBS Bank AI{% endblock %}
 {% block header_title %}Active Loans & Credit Facilities{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div class="glass-card p-6">
-    <div class="flex justify-between items-start mb-4">
-      <div>
-        <span class="text-xs uppercase text-slate-400 font-semibold">Home Loan</span>
-        <h3 class="text-xl font-bold text-white mt-1">₹45,00,000</h3>
-      </div>
-      <span class="px-2.5 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400">Active</span>
+<div class="space-y-6 max-w-6xl mx-auto">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-base font-bold text-white">Your Loan Portfolio</h3>
+      <p class="text-xs text-slate-400">Competitive interest rates linked directly to RBI repo rate</p>
     </div>
-    <div class="space-y-2 text-xs text-slate-300">
-      <div class="flex justify-between"><span>Interest Rate:</span><span class="font-semibold text-white">8.4% p.a.</span></div>
-      <div class="flex justify-between"><span>Tenure:</span><span class="font-semibold text-white">240 Months</span></div>
-      <div class="flex justify-between"><span>Monthly EMI:</span><span class="font-semibold text-emerald-400">₹38,750</span></div>
+    <div class="flex space-x-3">
+      <a href="/emi" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 hover:opacity-90 text-white rounded-xl text-xs font-semibold shadow-md transition">
+        📅 View & Pay EMIs
+      </a>
+      <button onclick="openApplyLoanModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition">
+        + Apply for Loan
+      </button>
     </div>
   </div>
 
-  <div class="glass-card p-6">
-    <div class="flex justify-between items-start mb-4">
-      <div>
-        <span class="text-xs uppercase text-slate-400 font-semibold">Personal Loan</span>
-        <h3 class="text-xl font-bold text-white mt-1">₹3,00,000</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="glass-card p-6 rounded-3xl border border-slate-800 relative">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Home Loan</span>
+          <h3 class="text-2xl font-bold text-white mt-1">₹45,00,000</h3>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
       </div>
-      <span class="px-2.5 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400">Active</span>
+      <div class="space-y-2.5 text-xs text-slate-300 py-3 border-y border-slate-800">
+        <div class="flex justify-between"><span>Outstanding Principal:</span><span class="font-bold text-white font-mono">₹41,20,500</span></div>
+        <div class="flex justify-between"><span>Floating Interest Rate:</span><span class="font-semibold text-white">8.40% p.a.</span></div>
+        <div class="flex justify-between"><span>Tenure:</span><span class="font-semibold text-white">240 Months</span></div>
+        <div class="flex justify-between"><span>Monthly Installment:</span><span class="font-bold text-emerald-400 font-mono text-sm">₹38,750</span></div>
+      </div>
+      <div class="mt-4 flex items-center justify-between">
+        <a href="/emi" class="text-xs text-blue-400 hover:underline font-medium">Pay Next EMI (Due 5th) →</a>
+        <button onclick="alert('Part-prepayment request registered! A CBS Bank relationship manager will confirm via SMS.');" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium border border-slate-700">Prepay</button>
+      </div>
     </div>
-    <div class="space-y-2 text-xs text-slate-300">
-      <div class="flex justify-between"><span>Interest Rate:</span><span class="font-semibold text-white">11.5% p.a.</span></div>
-      <div class="flex justify-between"><span>Tenure:</span><span class="font-semibold text-white">36 Months</span></div>
-      <div class="flex justify-between"><span>Monthly EMI:</span><span class="font-semibold text-emerald-400">₹9,880</span></div>
+
+    <div class="glass-card p-6 rounded-3xl border border-slate-800 relative">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Personal Loan</span>
+          <h3 class="text-2xl font-bold text-white mt-1">₹3,00,000</h3>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
+      </div>
+      <div class="space-y-2.5 text-xs text-slate-300 py-3 border-y border-slate-800">
+        <div class="flex justify-between"><span>Outstanding Principal:</span><span class="font-bold text-white font-mono">₹1,85,400</span></div>
+        <div class="flex justify-between"><span>Fixed Interest Rate:</span><span class="font-semibold text-white">11.50% p.a.</span></div>
+        <div class="flex justify-between"><span>Tenure:</span><span class="font-semibold text-white">36 Months</span></div>
+        <div class="flex justify-between"><span>Monthly Installment:</span><span class="font-bold text-emerald-400 font-mono text-sm">₹9,880</span></div>
+      </div>
+      <div class="mt-4 flex items-center justify-between">
+        <a href="/emi" class="text-xs text-blue-400 hover:underline font-medium">Pay Next EMI →</a>
+        <button onclick="alert('Foreclosure statement generated! Sent to your registered email.');" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium border border-slate-700">Foreclose</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Apply Loan Modal -->
+<div id="apply-loan-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+  <div class="glass-card max-w-md w-full p-6 rounded-3xl border border-slate-700 shadow-2xl relative">
+    <button onclick="closeApplyLoanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+    <h3 class="text-base font-bold text-white mb-1">Instant Loan Eligibility</h3>
+    <p class="text-xs text-slate-400 mb-4">AI pre-approved loans tailored to your credit score</p>
+    
+    <div class="space-y-3">
+      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center text-xs">
+        <div>
+          <span class="font-bold text-white block">Pre-Approved Personal Loan</span>
+          <span class="text-slate-400">Up to ₹5,00,000 @ 10.99%</span>
+        </div>
+        <button onclick="alert('Instant Loan application approved under pre-qualified limits! Reference: CBS-LN-9921'); closeApplyLoanModal();" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium text-xs">Apply</button>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center text-xs">
+        <div>
+          <span class="font-bold text-white block">Pre-Approved Auto Loan</span>
+          <span class="text-slate-400">100% On-road financing @ 8.75%</span>
+        </div>
+        <button onclick="alert('Auto Loan inquiry registered! Relationship manager will contact you.'); closeApplyLoanModal();" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium text-xs">Apply</button>
+      </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openApplyLoanModal() {
+  document.getElementById('apply-loan-modal').classList.remove('hidden');
+}
+function closeApplyLoanModal() {
+  document.getElementById('apply-loan-modal').classList.add('hidden');
+}
+</script>
 {% endblock %}

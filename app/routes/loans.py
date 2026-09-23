@@ -26,6 +26,11 @@ def api_loans():
 def api_emis():
     return LoanController.get_emis()
 
+@loans_bp.route('/api/emis/<int:emi_id>/pay', methods=['POST'])
+def api_pay_emi(emi_id):
+    return LoanController.pay_emi(emi_id)
+
 @loans_bp.route('/api/credit-score', methods=['GET'])
 def api_credit_score():
     return LoanController.get_credit_score()
+

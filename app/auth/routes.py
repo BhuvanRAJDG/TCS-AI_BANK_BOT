@@ -137,7 +137,7 @@ def register():
     # welcome notification
     notif = Notification(
         user_id    = user.id,
-        title      = 'Welcome to SentinelBank AI',
+        title      = 'Welcome to CBS Bank',
         body       = f'Hi {name}, your account has been created. Complete KYC to unlock all features.',
         notif_type = 'system',
         channel    = 'in_app',
@@ -309,20 +309,68 @@ def refresh():
 
 # ── POST /auth/logout ─────────────────────────────────────────────────────────
 
-@auth_bp.route('/logout', methods=['POST'])
-@jwt_required
+@auth_bp.route('/logout', methods=['GET', 'POST'])
 def logout():
     token = (request.get_json(silent=True) or {}).get('refresh_token') \
             or request.cookies.get('refresh_token')
     if token:
-        revoke_session_by_token(token)
-    log_logout(g.current_user.id)
-    db.session.commit()
+        try:
+            revoke_session_by_token(token)
+        except Exception:
+            pass
 
-    resp = make_response(jsonify({'message': 'Logged out.'}), 200)
+    user = getattr(g, 'current_user', None)
+    if user:
+        try:
+            log_logout(user.id)
+            db.session.commit()
+        except Exception:
+            pass
+
+    if request.method == 'GET' or 'text/html' in request.headers.get('Accept', ''):
+        from flask import redirect
+        resp = make_response(redirect('/login'))
+    else:
+        resp = make_response(jsonify({'message': 'Logged out successfully.'}), 200)
+
     resp.delete_cookie('access_token')
     resp.delete_cookie('refresh_token')
     return resp
+
+
+# ── POST /auth/verify-pin ─────────────────────────────────────────────────────
+
+@auth_bp.route('/verify-pin', methods=['POST'])
+def verify_pin():
+    """
+    Verify transaction authorization with user's UPI PIN or password.
+    Accepts: { "pin": str }
+    """
+    user = getattr(g, 'current_user', None)
+    if not user:
+        return jsonify({'valid': False, 'error': 'Unauthorized — please log in'}), 401
+
+    data = request.get_json(silent=True) or {}
+    pin = str(data.get('pin', '')).strip()
+
+    if not pin:
+        return jsonify({'valid': False, 'error': 'PIN or password required'}), 400
+
+    # Accept common UPI PINs (1234, 123456, 9999) OR actual account password
+    is_valid_pin = pin in ('1234', '123456', '9999')
+    is_valid_password = verify_password(pin, user.password_hash)
+
+    if is_valid_pin or is_valid_password:
+        return jsonify({
+            'valid': True,
+            'message': 'PIN verified successfully.'
+        }), 200
+
+    return jsonify({
+        'valid': False,
+        'error': 'Incorrect UPI PIN or password. Default demo PIN is 1234 or your account password.'
+    }), 400
+
 
 
 # ── POST /auth/logout-all ─────────────────────────────────────────────────────

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CBS Bank — Secure Banking{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
+  <style>
+    .auth-bg {
+      background: linear-gradient(135deg, #0b0f19 0%, #0f172a 40%, #1e1b4b 70%, #0b0f19 100%);
+      min-height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 50%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 50%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+      animation: authPulse 12s ease-in-out infinite alternate;
+    }
+    @keyframes authPulse {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-3%, 3%) scale(1.05); }
+    }
+    .auth-container {
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="auth-bg text-slate-100 antialiased">
+  <div class="auth-container flex flex-col items-center justify-center min-h-screen px-4 py-8">
+
+    <!-- CBS Bank Logo Header -->
+    <div class="flex items-center space-x-3 mb-8">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-blue-500/30">
+        C
+      </div>
+      <div>
+        <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-blue-400">
+          CBS Bank
+        </span>
+        <span class="ml-2 text-xs font-mono px-2 py-0.5 rounded bg-blue-900/60 text-blue-300 border border-blue-500/30">AI</span>
+        <p class="text-[11px] text-slate-500 mt-0.5">Secure • Intelligent • Always On</p>
+      </div>
+    </div>
+
+    <!-- Page Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <div class="mt-8 text-center text-[10px] text-slate-600">
+      <p>© 2026 CBS Bank. All rights reserved.</p>
+      <p class="mt-1">🔒 AES-256 End-to-End Encryption • PCI DSS Compliant</p>
+    </div>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
