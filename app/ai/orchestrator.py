@@ -1,4 +1,4 @@
-"""
+﻿"""
 app/ai/orchestrator.py
 AI Banking Copilot orchestrator with Active Conversational Learning & Hybrid RAG.
 """
@@ -81,7 +81,7 @@ def _fetch_sql_context(intent: str, customer_id: Optional[int]) -> str:
 
         if intent == "balance":
             accounts = Account.query.filter_by(customer_id=customer_id, is_active=True).all()
-            lines = [f"• {a.account_type.capitalize()} Account (****{a.account_number[-4:]}): ₹{a.balance:,.2f} (IFSC: {a.ifsc_code})"
+            lines = [f"â€¢ {a.account_type.capitalize()} Account (****{a.account_number[-4:]}): â‚¹{a.balance:,.2f} (IFSC: {a.ifsc_code})"
                      for a in accounts]
             return "Real-Time Account Balances:\n" + "\n".join(lines) if lines else "No active accounts found."
 
@@ -94,7 +94,7 @@ def _fetch_sql_context(intent: str, customer_id: Optional[int]) -> str:
                 Transaction.account_id.in_(account_ids)
             ).order_by(Transaction.timestamp.desc()).limit(8).all()
             lines = [
-                f"• {tx.timestamp.strftime('%d %b %Y, %H:%M')} | {tx.transaction_type.upper()} ₹{tx.amount:,.2f} | {tx.merchant or tx.description or 'Transfer'} ({tx.category}) [Ref: {tx.reference_id}]"
+                f"â€¢ {tx.timestamp.strftime('%d %b %Y, %H:%M')} | {tx.transaction_type.upper()} â‚¹{tx.amount:,.2f} | {tx.merchant or tx.description or 'Transfer'} ({tx.category}) [Ref: {tx.reference_id}]"
                 for tx in txs
             ]
             return "Recent Real-Time Transactions:\n" + "\n".join(lines) if lines else "No recent transactions found."
@@ -106,8 +106,8 @@ def _fetch_sql_context(intent: str, customer_id: Optional[int]) -> str:
                 EMI.loan_id.in_(loan_ids), EMI.status == 'pending'
             ).order_by(EMI.due_date.asc()).limit(6).all()
             lines = [
-                f"• EMI #{e.installment_no} | Due: {e.due_date.strftime('%d %b %Y')} | "
-                f"Amount: ₹{e.total_amount:,.2f} (Principal: ₹{e.principal:,.2f}, Interest: ₹{e.interest:,.2f})"
+                f"â€¢ EMI #{e.installment_no} | Due: {e.due_date.strftime('%d %b %Y')} | "
+                f"Amount: â‚¹{e.total_amount:,.2f} (Principal: â‚¹{e.principal:,.2f}, Interest: â‚¹{e.interest:,.2f})"
                 for e in emis
             ]
             return "Upcoming EMI Installments:\n" + "\n".join(lines) if lines else "No pending EMIs due."
@@ -115,7 +115,7 @@ def _fetch_sql_context(intent: str, customer_id: Optional[int]) -> str:
         elif intent == "loans":
             loans = Loan.query.filter_by(customer_id=customer_id).all()
             lines = [
-                f"• {l.loan_type.capitalize()} Loan #{l.loan_account_number}: Principal ₹{l.loan_amount:,.2f} at {l.interest_rate}% p.a. (Status: {l.status})"
+                f"â€¢ {l.loan_type.capitalize()} Loan #{l.loan_account_number}: Principal â‚¹{l.loan_amount:,.2f} at {l.interest_rate}% p.a. (Status: {l.status})"
                 for l in loans
             ]
             return "Customer Loan Accounts:\n" + "\n".join(lines) if lines else "No active loan accounts found."
@@ -125,7 +125,7 @@ def _fetch_sql_context(intent: str, customer_id: Optional[int]) -> str:
             if cs:
                 return (f"CIBIL Credit Score: {cs.score} / 900\nBureau: {cs.bureau}\n"
                         f"Status Rating: {cs.remarks or 'Excellent'}\nLast Evaluated: {cs.recorded_at.strftime('%d %b %Y')}")
-            return "CIBIL Credit Score: 770 / 900 (Excellent Status • No negative remarks)."
+            return "CIBIL Credit Score: 770 / 900 (Excellent Status â€¢ No negative remarks)."
 
         return "Requested banking data not found."
 
@@ -177,14 +177,14 @@ def _call_llm(system_prompt: str, user_message: str,
 
 def _match_transfer_command(query: str) -> tuple[str, float] | None:
     q = query.strip()
-    m1 = re.search(r"(?:transfer|send|pay|remit)\s+(?:₹\s*)?(\d+(?:\.\d{1,2})?)\s+(?:to|for)\s+([A-Za-z0-9\s]+)", q, re.I)
+    m1 = re.search(r"(?:transfer|send|pay|remit)\s+(?:â‚¹\s*)?(\d+(?:\.\d{1,2})?)\s+(?:to|for)\s+([A-Za-z0-9\s]+)", q, re.I)
     if m1:
         try:
             return m1.group(2).strip(), float(m1.group(1))
         except ValueError:
             pass
 
-    m2 = re.search(r"(?:transfer|send|pay|remit)\s+([A-Za-z\s]+?)\s+(?:₹\s*)?(\d+(?:\.\d{1,2})?)", q, re.I)
+    m2 = re.search(r"(?:transfer|send|pay|remit)\s+([A-Za-z\s]+?)\s+(?:â‚¹\s*)?(\d+(?:\.\d{1,2})?)", q, re.I)
     if m2:
         try:
             name = m2.group(1).strip()
@@ -205,7 +205,7 @@ def process_query(query: str, customer_id: Optional[int],
     # 1. Privacy Firewall
     if _is_injection(query):
         return {
-            "response":   "I cannot process that request — it contains unsafe or restricted instructions.",
+            "response":   "I cannot process that request â€” it contains unsafe or restricted instructions.",
             "intent":     "blocked",
             "route":      "blocked",
             "citations":  [],
@@ -220,10 +220,10 @@ def process_query(query: str, customer_id: Optional[int],
         category, topic, content = learn_fact
         saved = store_learned_fact(user_id=user_id, category=category, topic=topic, content=content)
         ack_text = (
-            f"✅ **Understood & Remembered!**\n\n"
+            f"âœ… **Understood & Remembered!**\n\n"
             f"I have committed this new information to your secure bank profile:\n"
-            f"• **Topic:** `{saved['topic']}`\n"
-            f"• **Learned Fact:** *\"{saved['content']}\"*\n\n"
+            f"â€¢ **Topic:** `{saved['topic']}`\n"
+            f"â€¢ **Learned Fact:** *\"{saved['content']}\"*\n\n"
             f"*(This knowledge is now indexed and will be applied to all your future queries and banking assistance.)*"
         )
         return {
@@ -239,8 +239,8 @@ def process_query(query: str, customer_id: Optional[int],
     if transfer_match:
         target_name, amount = transfer_match
         response_text = (
-            f"🔒 **Transfer Authorization Required**\n\n"
-            f"You are initiating a transfer of **₹{amount:,.2f}** to **{target_name}** via CBS FastPay UPI.\n\n"
+            f"ðŸ”’ **Transfer Authorization Required**\n\n"
+            f"You are initiating a transfer of **â‚¹{amount:,.2f}** to **{target_name}** via CBS FastPay UPI.\n\n"
             f"Please authorize this transaction with your **UPI PIN** in the confirmation prompt below."
         )
         return {
@@ -271,7 +271,7 @@ def process_query(query: str, customer_id: Optional[int],
             CUSTOMER SERVICE GUIDELINES:
             1. Deliver clear, warmly formatted, and concise answers with bullet points and bold highlights.
             2. Never reveal full sensitive account numbers (use masked ****1234).
-            3. Always format monetary values in Indian Rupees (₹).
+            3. Always format monetary values in Indian Rupees (â‚¹).
             4. If relevant learned preferences are provided, apply them accurately.
 
             --- REAL-TIME CUSTOMER BANK DATA ---
@@ -294,7 +294,7 @@ def process_query(query: str, customer_id: Optional[int],
             1. Always be polite, warm, professional, and directly helpful.
             2. Use the verified CBS Bank knowledge and any user-learned memory provided below to formulate your answers.
             3. If the user asks about something they previously taught you (e.g. branch preference, contact rules, custom facts), utilize the [Learned Custom Fact] accurately and acknowledge it.
-            4. Format numbers cleanly, use bullet points, and express Indian financial amounts in Indian Rupees (₹).
+            4. Format numbers cleanly, use bullet points, and express Indian financial amounts in Indian Rupees (â‚¹).
             5. If a general question is asked (greetings, calculations, banking terminology), answer using your broad financial intelligence accurately and helpfully.
 
             --- VERIFIED CBS KNOWLEDGE & USER MEMORY ---
